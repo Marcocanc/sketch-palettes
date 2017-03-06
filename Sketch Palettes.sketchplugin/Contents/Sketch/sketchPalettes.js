@@ -140,7 +140,7 @@ function saveColors(context,target) {
 }
 
 //-------------------------------------------------------------------------------------------------------------
-// Save color palette as Swift
+// Save color and gradient palette as Swift
 //-------------------------------------------------------------------------------------------------------------
 
 
@@ -153,17 +153,19 @@ function saveColorsSwift(context,target) {
 	// Get colors from target color picker section
 	
 	if (target == "global") {
-		var colors = app.globalAssets().colors()	
+		var colors = app.globalAssets().colors()
+		var gradients = app.globalAssets().gradients()
 	} else if (target == "document") {
 		var colors = doc.documentData().assets().colors();
+		var gradients = doc.documentData().assets().gradients();
 	}
 	
 	// Only run if there are colors
 	
-	if (colors.length > 0) {	
+	if (colors.length > 0 || gradients.length > 0) {	
 		
 		var save = NSSavePanel.savePanel();
-		save.setNameFieldStringValue("UIColor+Palette.swift");
+		save.setNameFieldStringValue("Palette.swift");
 		save.setAllowedFileTypes([@"swift"]);
 		save.setAllowsOtherFileTypes(false);
 		save.setExtensionHidden(false);
@@ -172,15 +174,32 @@ function saveColorsSwift(context,target) {
 		
 		if (save.runModal()) {
 			
-			// Convert MSColors to rgba
+			var palette = "import UIKit\n\n"
 			
-			var palette = "import UIKit\n\nextension UIColor {\n";
-			
-			for (var i = 0; i < colors.length; i++) {
-				palette += "	class var color"+i+": UIColor { return #colorLiteral(red: "+colors[i].red()+", green: "+colors[i].green()+", blue: "+colors[i].blue()+", alpha: "+colors[i].alpha()+") }\n"
-			};
+			if (colors.length > 0) {
+				palette += "extension UIColor {\n"
+				
+				for (var i = 0; i < colors.length; i++) {
+					palette += msColorToUIColorClassVar("color"+i, colors[i])
+				};
 
-			palette += "}"
+				palette += "}\n\n"
+			}
+
+			if (gradients.length > 0) {
+				palette += "extension CAGradientLayer {\n"
+				
+				for (var i = 0; i < gradients.length; i++) {
+					var gradient = gradients[i]
+					// only support linear (aka axial) gradients
+					if (gradient.gradientType() == 0) {
+						palette += msGradientToCAGradientLayerClassVar("gradient"+i , gradient)+"\n\n"
+					}
+					
+				};
+
+				palette += "}\n\n"
+			}
 
 			// Get chosen file path
 			
@@ -194,8 +213,46 @@ function saveColorsSwift(context,target) {
 
 		}
 		
-	} else { NSApp.displayDialog("No colors in palette!"); }
+	} else { NSApp.displayDialog("No colors or linar gradients in palette!"); }
 
+}
+
+
+function msColorToUIColorClassVar(name, color) {
+	return "	class var "+name+": UIColor { return "+colorLiteralFrom(color)+" }\n"
+}
+
+function msGradientToCAGradientLayerClassVar(name, gradient) {
+	var startPoint = gradient.from()
+	var endPoint = gradient.to()
+
+	var stopPositions = []
+	var stopColors = []
+
+	var stops = gradient.stops();
+	stops.forEach(function(stop) {
+	    stopPositions.push(stop.position())
+	    stopColors.push(cgColorFrom(stop.colorGeneric()))
+	})
+
+	var joinedPositions = stopPositions.join(", ")
+	var joinedColors = stopColors.join(", ")
+	var string =	"	class var "+name+": CAGradientLayer {\n"
+		string +=	"		let layer = CAGradientLayer()\n"
+		string +=	"		layer.locations = ["+joinedPositions+"]\n"
+		string +=	"		layer.colors = ["+joinedColors+"]\n"
+		string +=	"		layer.startPoint = CGPoint(x: "+startPoint.x+", y: "+startPoint.y+")\n"
+		string +=	"		layer.endPoint = CGPoint(x: "+endPoint.x+", y: "+endPoint.y+")\n"
+		string +=	"		return layer\n"
+		string +=	"	}"
+	return string
+}
+
+function cgColorFrom(mscolor) {
+	return colorLiteralFrom(mscolor)+".cgColor"
+}
+function colorLiteralFrom(mscolor) {
+	return "#colorLiteral(red: "+mscolor.red()+", green: "+mscolor.green()+", blue: "+mscolor.blue()+", alpha: "+mscolor.alpha()+")"
 }
 
 //-------------------------------------------------------------------------------------------------------------
