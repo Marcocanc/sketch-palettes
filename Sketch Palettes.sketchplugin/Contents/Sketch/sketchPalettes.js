@@ -139,6 +139,64 @@ function saveColors(context,target) {
 
 }
 
+//-------------------------------------------------------------------------------------------------------------
+// Save color palette as Swift
+//-------------------------------------------------------------------------------------------------------------
+
+
+function saveColorsSwift(context,target) {
+	
+	var doc = context.document;
+	var app = NSApp.delegate();
+	var version = context.plugin.version().UTF8String();
+	
+	// Get colors from target color picker section
+	
+	if (target == "global") {
+		var colors = app.globalAssets().colors()	
+	} else if (target == "document") {
+		var colors = doc.documentData().assets().colors();
+	}
+	
+	// Only run if there are colors
+	
+	if (colors.length > 0) {	
+		
+		var save = NSSavePanel.savePanel();
+		save.setNameFieldStringValue("UIColor+Palette.swift");
+		save.setAllowedFileTypes([@"swift"]);
+		save.setAllowsOtherFileTypes(false);
+		save.setExtensionHidden(false);
+		
+		// Open save dialog and run if Save was clicked
+		
+		if (save.runModal()) {
+			
+			// Convert MSColors to rgba
+			
+			var palette = "import UIKit\n\nextension UIColor {\n";
+			
+			for (var i = 0; i < colors.length; i++) {
+				palette += "	class var color"+i+": UIColor { return #colorLiteral(red: "+colors[i].red()+", green: "+colors[i].green()+", blue: "+colors[i].blue()+", alpha: "+colors[i].alpha()+") }\n"
+			};
+
+			palette += "}"
+
+			// Get chosen file path
+			
+			var filePath = save.URL().path();
+			
+			// Write file to specified file path
+			
+			var file = NSString.stringWithString(palette);
+			
+			[file writeToFile:filePath atomically:true encoding:NSUTF8StringEncoding error:null];
+
+		}
+		
+	} else { NSApp.displayDialog("No colors in palette!"); }
+
+}
 
 //-------------------------------------------------------------------------------------------------------------
 // Menu Items
@@ -155,6 +213,10 @@ function saveGlobalPalette(context) {
 	saveColors(context, "global");
 }
 
+function saveGlobalPaletteSwift(context) {
+	saveColorsSwift(context, "global");
+}
+
 function clearGlobalPalette(context) {	
 	var app = NSApp.delegate();
 	app.globalAssets().setColors([]);
@@ -169,6 +231,10 @@ function loadDocumentPalette(context) {
 
 function saveDocumentPalette(context) {
 	saveColors(context, "document");
+}
+
+function saveDocumentPaletteSwift(context) {
+	saveColorsSwift(context, "document");
 }
 
 function clearDocumentPalette(context) {	

@@ -25,6 +25,13 @@
 			"handler": "saveDocumentPalette"
 		},
 		{
+			"name": "Save Palette Swift...",
+			"identifier": "saveDocumentPaletteSwift",
+			"shortcut": "",
+			"script": "sketchPalettes.js",
+			"handler": "saveDocumentPaletteSwift"
+		},
+		{
 			"name": "Clear Palette",
 			"identifier": "clearDocumentPalette",
 			"shortcut": "",
@@ -49,6 +56,13 @@
 			"handler": "saveGlobalPalette"
 		},
 		{
+			"name": "Save Palette Swift...",
+			"identifier": "saveGlobalPaletteSwift",
+			"shortcut": "",
+			"script": "sketchPalettes.js",
+			"handler": "saveGlobalPaletteSwift"
+		},
+		{
 			"name": "Clear Palette",
 			"identifier": "clearGlobalPalette",
 			"shortcut": "",
@@ -65,6 +79,7 @@
 				"items": [
 					"loadDocumentPalette",
 					"saveDocumentPalette",
+					"saveDocumentPaletteSwift",
 					"clearDocumentPalette"
 				],
 			},
@@ -73,6 +88,7 @@
 				"items": [
 					"loadGlobalPalette",
 					"saveGlobalPalette",
+					"saveGlobalPaletteSwift",
 					"clearGlobalPalette"
 				],
 			}
